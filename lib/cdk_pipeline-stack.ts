@@ -41,13 +41,16 @@ export class CdkPipelineStack extends cdk.Stack {
         }
       )
     })
+    
+    // Get account and region from context
+    const devEnv = this.node.tryGetContext('dev');
+    const prodEnv = this.node.tryGetContext('prod');
 
     // Deployment Stage for Dev Environment
-
     const dev_deployment_stage =  pipeline.addStage(new DeploymentStage(this, 'Dev',
       {env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION
+        account: devEnv.account,
+        region: devEnv.region,
       }}
     ));
     
@@ -55,10 +58,9 @@ export class CdkPipelineStack extends cdk.Stack {
     const prod_wave = pipeline.addWave("Prod");
     prod_wave.addStage(new ProdStage(this, 'Prod',
       {env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION
+        account: prodEnv.account,
+        region: prodEnv.region,
       }}
     ));
-
   }
 }

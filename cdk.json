@@ -69,6 +69,14 @@
     "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": false,
     "@aws-cdk/aws-s3:keepNotificationInImportedBucket": false,
     "@aws-cdk/aws-ecs:reduceEc2FargateCloudWatchPermissions": true,
-    "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": true
+    "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": true,
+    "dev": {
+      "account": "590443650088",
+      "region": "us-east-1"
+    },
+    "prod": {
+      "account": "458129630450",
+      "region": "us-east-1"
+    }
   }
 }

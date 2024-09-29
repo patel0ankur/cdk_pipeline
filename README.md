@@ -218,8 +218,64 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
     git add . && git commit -m "Add CDK Pipeline Stages" && git push
     ```
 
+### Cross-account deployments
 
+In order to allow the Tooling account perform deployments to any other accounts, the cdk bootstrap command for those accounts has to be slightly modified by adding "trust" parameters. For example, if your *Tooling/DevOps* account ID (aka. Pipeline Account) is `123456789012` and your *Target* account ID (aka. Prod Account) is `234567890123` in `us-east-1` region then your cdk bootstrap command (remember, this has to be executed in the Target account) will be:
 
+```
+cdk bootstrap \
+    --trust 123456789012 \
+    --trust-for-lookup 123456789012 \
+    --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess \
+    aws://234567890123/us-east-1
+```
+
+The command above will add statements to Target account's CDK IAM roles so those can be assumed by your Tooling account.
+
+To get the Account IDs and Region details from *cdk.json* file. 
+
+1) Update the *context* in *cdk.json* file:
+
+```
+"dev": {
+    "account": "590443650088",
+    "region": "us-east-1"
+},
+"prod": {
+    "account": "458129630450",
+    "region": "us-east-1"
+}
+```
+
+2) Update the *lib/cdk_pipeline-stack.ts* file with following code to get the Account IDs and Region values from the *cdk.json* file. 
+
+```
+// Get account and region from context
+const devEnv = this.node.tryGetContext('dev');
+const prodEnv = this.node.tryGetContext('prod');
+
+// Deployment Stage for Dev Environment
+const dev_deployment_stage =  pipeline.addStage(new DeploymentStage(this, 'Dev',
+  {env: {
+    account: devEnv.account,
+    region: devEnv.region,
+  }}
+));
+
+// Deployment Stage for Prod Environment
+const prod_wave = pipeline.addWave("Prod");
+prod_wave.addStage(new ProdStage(this, 'Prod',
+  {env: {
+    account: prodEnv.account,
+    region: prodEnv.region,
+  }}
+));
+```
+c) Push code changes to GitHub:
+
+```
+git add . && git commit -m "Add CDK Pipeline Stages" && git push
+```
 
 
 
