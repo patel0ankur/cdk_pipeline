@@ -105,6 +105,82 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
 
    ![pipeline](images/pipeline.png)
 
+9) Add deployment stages to the CDK pipeline:
+   
+   The pipeline has been created but apart from self-mutate feature, it doesn't do anything useful. Let's add deployment stages. We'll deploy both Development and Production stacks to the same account and region, whereas in real projects you most likely will deploy your stacks to multiple AWS account.
+
+   a) Develop CDK code for a Lambda function that will be deployed using CodePipeline.
+      
+      ```
+      mkdir lib/lambda_code/lambda-stack.ts
+      ```
+
+      Add following code in the above file:
+
+      ```
+      import { Stack, StackProps } from 'aws-cdk-lib';
+      import { Construct } from 'constructs';
+      import { Function, InlineCode, Runtime } from 'aws-cdk-lib/aws-lambda';
+      import { CfnOutput } from 'aws-cdk-lib';
+      
+      export class MyLambdaStack extends Stack {
+          constructor(scope: Construct, id: string, props?: StackProps) {
+            super(scope, id, props);
+      
+            const lambda_function = new Function(this, 'LambdaFunction', {
+              runtime: Runtime.PYTHON_3_12,
+              handler: 'index.handler',
+              code: new InlineCode("def handler(event, context):\n    print('Hello from       Lambda!')")
+            })
+      
+            const function_name = new CfnOutput(this, 'LambdaArn', { value: lambda_function.functionName });
+      
+          }
+      }
+      ```
+      In order to retrieve and use the function name down the pipeline, we need to export it which is done through CfnOutput.
+
+    b) Create Deployment Stage.
+
+    ```
+    import * as cdk from 'aws-cdk-lib';
+    import { Construct } from "constructs";
+    import { MyLambdaStack } from './lambda_code/lambda-stack';
+    
+    
+    export class DeploymentStage extends cdk.Stage {
+    
+        constructor(scope: Construct, id: string, props?: cdk.StageProps) {
+            super(scope, id, props);
+            
+            const lambdaStack = new MyLambdaStack(this, 'LambdaStack');
+        }
+    }
+    ```
+    c) Add "DEV" environments deployment stages to the pipeline. Edit *lib/cdk_pipeline-stack.ts* file by replacing account IDs and regions to match your values:
+
+    ```
+    const dev_deployment_stage =  pipeline.addStage(new DeploymentStage(this, 'Dev',
+      {env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+      }}
+    ));
+    ```
+    
+    Above we've defined Development environment deployment stage.
+
+    d) Push code changes to GitHub:
+
+    ```
+    git add . && git commit -m "Add CDK Pipeline Stages" && git push
+    ```
+
+    After the push, the pipeline will be started and will update itself by adding new stages. Then it will restart with updated set of stages and run those newly added stages. Also, since our LambdaStack includes a Lambda function, there will be one extra Assets step which is responsible for uploading Lambda code to CDK's S3 Assets bucket.
+
+    Navigate to the pipeline and wait until "DEV" deployment is complete.
+
+
 
 
 
