@@ -140,7 +140,7 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
       ```
       In order to retrieve and use the function name down the pipeline, we need to export it which is done through CfnOutput.
 
-    b) Create Deployment Stage.
+    b) Create Development Deployment Stage.
 
     ```
     import * as cdk from 'aws-cdk-lib';
@@ -157,6 +157,7 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
         }
     }
     ```
+
     c) Add "DEV" environments deployment stages to the pipeline. Edit *lib/cdk_pipeline-stack.ts* file by replacing account IDs and regions to match your values:
 
     ```
@@ -179,6 +180,45 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
     After the push, the pipeline will be started and will update itself by adding new stages. Then it will restart with updated set of stages and run those newly added stages. Also, since our LambdaStack includes a Lambda function, there will be one extra Assets step which is responsible for uploading Lambda code to CDK's S3 Assets bucket.
 
     Navigate to the pipeline and wait until "DEV" deployment is complete.
+
+    e) Repeat steps `b`, `c` & `d` for Prod deployment stage. 
+    
+    Production Deployment Stage.
+    ```
+    import * as cdk from 'aws-cdk-lib';
+    import { Construct } from "constructs";
+    import { MyLambdaStack } from './lambda_code/lambda-stack';
+    
+    
+    export class ProdStage extends cdk.Stage {
+    
+        constructor(scope: Construct, id: string, props?: cdk.StageProps) {
+            super(scope, id, props);
+    
+            const lambdaStack = new MyLambdaStack(this, 'LambdaStack');
+        }
+    }
+    ```
+
+    Add "Prod" environments deployment stages to the pipeline. Edit *lib/cdk_pipeline-stack.ts* file by replacing account IDs and regions to match your values:
+
+    ```
+    const prod_wave = pipeline.addWave("Prod");
+    prod_wave.addStage(new ProdStage(this, 'Prod',
+      {env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+      }}
+    ));
+    ```
+
+    Push code changes to GitHub:
+
+    ```
+    git add . && git commit -m "Add CDK Pipeline Stages" && git push
+    ```
+
+
 
 
 

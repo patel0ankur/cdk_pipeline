@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { LinuxBuildImage } from 'aws-cdk-lib/aws-codebuild';
 import { DeploymentStage } from './cdk_pipeline-stage-dev';
+import { ProdStage } from './cdk_pipeline-stage-prod';
 
 export class CdkPipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -44,6 +45,15 @@ export class CdkPipelineStack extends cdk.Stack {
     // Deployment Stage for Dev Environment
 
     const dev_deployment_stage =  pipeline.addStage(new DeploymentStage(this, 'Dev',
+      {env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+      }}
+    ));
+    
+    // Deployment Stage for Prod Environment
+    const prod_wave = pipeline.addWave("Prod");
+    prod_wave.addStage(new ProdStage(this, 'Prod',
       {env: {
         account: process.env.CDK_DEFAULT_ACCOUNT,
         region: process.env.CDK_DEFAULT_REGION
