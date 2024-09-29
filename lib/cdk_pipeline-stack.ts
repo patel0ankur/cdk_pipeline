@@ -17,7 +17,6 @@ export class CdkPipelineStack extends cdk.Stack {
     )
 
     const pipeline = new pipelines.CodePipeline(this, 'CdkPipeline', {
-
       pipelineName: 'CdkPipeline',
       crossAccountKeys: true,       // <---- For Cross Account Deployment
       codeBuildDefaults: {

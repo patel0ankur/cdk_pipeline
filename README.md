@@ -101,7 +101,10 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
    ```
    cdk deploy
    ```
-   
+   After the deployment is complete, navigate to AWS CodePipeline service and click on the CdkPipeline pipeline. It will look similar to the screenshot below. Notice that it has UpdatePipeline stage which is responsible for updating the pipeline itself (self-mutate). At this point an AWS EventBridge Rule has also been created, and it'll trigger the pipeline on any commit to the main branch, so we won't need to run cdk deploy command manually again. Please note that the pipeline is already running so make sure that you've pushed your code to AWS CodeCommit before you create the pipeline.
+
+   ![pipeline](images/pipeline.png)
+
 
 
 
