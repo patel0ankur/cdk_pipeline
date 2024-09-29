@@ -59,6 +59,55 @@ new CdkPipelineStack(app, 'CdkPipelineStack', {
    ```
    cdk deploy
    ```
+6) Add CodePipeline Construct:
+   
+   Open *lib/cdk_pipeline-stack.ts* file and add the code below to the bottom of the file, make sure you saved the file:
+
+   ```
+   const pipeline = new pipelines.CodePipeline(this, 'CdkPipeline', {
+
+      pipelineName: 'CdkPipeline',
+      crossAccountKeys: true,       // <---- For Cross Account Deployment
+      codeBuildDefaults: {
+        buildEnvironment: {
+          privileged: true,
+          buildImage: LinuxBuildImage.STANDARD_7_0
+        }
+      },
+      synth: new pipelines.ShellStep('Synth',
+        {
+          input: git_hub_commit,
+          commands: [
+            'npm ci',
+            'npm run build',
+            'npx cdk synth'
+          ]
+        }
+      )
+    })
+   ```
+
+   Here we're using previously created GitHub repository as code source (input parameter). Notice the build_image parameter which points to the latest available CodeBuild image as build environment (STANDARD_7_0).
+
+7) Push code changes to GitHub Repo:
+   
+   ```
+   git commit -am "Add CDK Pipeline"
+   git push
+   ```
+
+8) Deploy the CdkPipelineStack stack:
+   
+   ```
+   cdk deploy
+   ```
+   
+
+
+
+
+
+
 
      
 
